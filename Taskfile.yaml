@@ -1,0 +1,6 @@
+version: '3'
+
+includes:
+  application:
+    taskfile: ./application/Taskfile.yaml
+    dir: ./application

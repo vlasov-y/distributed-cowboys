@@ -1,0 +1,59 @@
+#  ┬─┐┬─┐┐ ┬┬─┐┬  ┌─┐┬─┐┌┌┐┬─┐┌┐┐┌┐┐
+#  │ │├─ │┌┘├─ │  │ ││─┘│││├─ │││ │ 
+#  ┘─┘┴─┘└┘ ┴─┘┘─┘┘─┘┘  ┘ ┘┴─┘┘└┘ ┘ 
+
+services:
+  postgres:
+    image: postgres:14.9-alpine3.18
+    restart: 'no'
+    ports:
+    - 5432:5432
+    environment:
+      POSTGRES_USER: cowboy
+      POSTGRES_PASSWORD: cowboy
+      POSTGRES_DB: cowboy
+
+  seed:
+    image: yuriyvlasov/distributed-cowboys:latest-linux-amd64
+    restart: 'no'
+    environment:
+      GENERATE_RANDOM_COWBOYS: 3
+      OPERATION_MODE: seed
+      CONFIGURATION: |-
+        databaseConnectionString: postgres://cowboy:cowboy@postgres:5432/cowboy?sslmode=disable
+
+  cowboy1:
+    image: yuriyvlasov/distributed-cowboys:latest-linux-amd64
+    restart: always
+    ports:
+    - 3001:3001
+    environment:
+      CONFIGURATION: |-
+        serverPort: 3001
+        workerName: cowboy1
+        shootingDelay: 1
+        databaseConnectionString: postgres://cowboy:cowboy@postgres:5432/cowboy?sslmode=disable
+
+  cowboy2:
+    image: yuriyvlasov/distributed-cowboys:latest-linux-amd64
+    restart: always
+    ports:
+    - 3002:3002
+    environment:
+      CONFIGURATION: |-
+        serverPort: 3002
+        workerName: cowboy2
+        shootingDelay: 1
+        databaseConnectionString: postgres://cowboy:cowboy@postgres:5432/cowboy?sslmode=disable
+
+  cowboy3:
+    image: yuriyvlasov/distributed-cowboys:latest-linux-amd64
+    restart: always
+    ports:
+    - 3003:3003
+    environment:
+      CONFIGURATION: |-
+        serverPort: 3003
+        workerName: cowboy3
+        shootingDelay: 1
+        databaseConnectionString: postgres://cowboy:cowboy@postgres:5432/cowboy?sslmode=disable

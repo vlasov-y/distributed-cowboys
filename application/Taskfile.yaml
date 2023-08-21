@@ -1,0 +1,52 @@
+version: '3'
+
+env:
+  IMAGE: yuriyvlasov/distributed-cowboys:latest
+  PLATFORMS: linux/amd64 linux/arm64/v8
+
+tasks:
+  build:
+    cmds:
+    - for:
+        var: PLATFORMS
+      task: build-single
+      vars:
+        IMAGE: '{{ replace "/" "-" .ITEM | printf "%s-%s" .IMAGE }}'
+        PLATFORM: '{{ .ITEM }}'
+
+  push:
+    cmds:
+    - for:
+        var: PLATFORMS
+      task: push-single
+      vars:
+        IMAGE: '{{ replace "/" "-" .ITEM | printf "%s-%s" .IMAGE }}'
+
+  build-single:
+    requires:
+      vars: [IMAGE, PLATFORM]
+    cmds:
+    - |-
+      docker build \
+        --platform {{ squote .PLATFORM }} \
+        -t {{ squote .IMAGE }} .
+
+  push-single:
+    requires:
+      vars: [IMAGE]
+    cmds:
+    - docker push {{ squote .IMAGE }}
+
+  manifest:
+    requires:
+      vars: [PLATFORMS]
+    cmds:
+    - |
+      {{- $args := list }}
+      {{- range splitList " " .PLATFORMS }}
+      {{- $args = replace "/" "-" . | printf "--amend %s-%s" $.IMAGE | append $args }}
+      {{- end }}
+      docker manifest create \
+        {{ squote .IMAGE }} \
+        {{- join " \\\n" $args | nindent 2 }}
+      docker manifest push {{ squote .IMAGE }}
